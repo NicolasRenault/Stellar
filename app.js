@@ -41,6 +41,9 @@ const inputWeekSleepTime = document.getElementById('input_week_sleep_time');
 const inputWeekWakeTime = document.getElementById('input_week_wake_time');
 const inputWeekendSleepTime = document.getElementById('input_weekend_sleep_time');
 const inputWeekendWakeTime = document.getElementById('input_weekend_wake_time');
+const sleepingScheduleList = document.getElementById('sleeping_schedule');
+const inputScheduleSleepTime = document.getElementById('input_schedule_sleep_time');
+const inputScheduleWakeTime = document.getElementById('input_schedule_wake_time');
 
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.log('error'));
 signOutBtn.onclick = () => signOut(auth);
@@ -49,7 +52,7 @@ let user;
 let unsubscribe;
 
 let dateList = [];
-let currentDateIndex;
+let currentDateIndex = null;
 
 
 /** ------------
@@ -75,10 +78,10 @@ editUserSettings.onclick = () => {
     try {
         setDoc(doc(db, "user-settings", user.uid), {
             uid: user.uid,
-            week_sleep_time : validateHourField(inputWeekSleepTime.value),
-            week_wake_time : validateHourField(inputWeekWakeTime.value),
-            weekend_sleep_time : validateHourField(inputWeekendSleepTime.value),
-            weekend_wake_time : validateHourField(inputWeekendWakeTime.value),
+            week_sleep_time : formateHourField(inputWeekSleepTime.value),
+            week_wake_time : formateHourField(inputWeekWakeTime.value),
+            weekend_sleep_time : formateHourField(inputWeekendSleepTime.value),
+            weekend_wake_time : formateHourField(inputWeekendWakeTime.value),
         });
         console.log("Users settings has been saved for user : ", user.displayName);
     } catch (e) {
@@ -95,7 +98,7 @@ editUserSettings.onclick = () => {
 /**
  * Init the user informations 
  * 
- * @param {User} loggedUser 
+ * @param {User} loggedUser
  */
 function loginUser(loggedUser) {
     user = loggedUser;
@@ -167,12 +170,23 @@ function logoutUser() {
  * @param {String} value 
  * @returns String at format "XXXX" containing;
  */
-function validateHourField(value) {
+function formateHourField(value) {
     if (value ==  undefined || value == "") {
         return "0000";
     } else  {
         return value.replace(":", "");
     }
+}
+
+/**
+ * Validate if the value passed in parameter is at the format HH:mm
+ * 
+ * @param {String} value 
+ * @returns Bool
+ */
+function validateHourField(value) {
+    let regex = /^0[0-9]|1[0-9]|2[0-3]:[0-5][0-9] to 0[0-9]|1[0-9]|2[0-3]:[0-5][0-9]$/;
+    return regex.test(value);
 }
 
 /**
@@ -189,25 +203,34 @@ function formatHourForInput(hour) {
     }
 }
 
+/**
+ * Init the date list beetween the last month and the next 15 days, with database value if found
+ */
 function initDateList() {
-    let now = DateTime.now(); //TODO trouvé l'équilibre entre last et next
+    let now = DateTime.now();
     let lastTwoWeek = DateTime.now().minus({day: 15});
-    let lastMonth = DateTime.now().minus({ month: 1 });
-    let nextMonth = DateTime.now().plus({ day: 7 });
-    let monthIndex = lastMonth;
+    let nextTwoWeek = DateTime.now().plus({day: 15});
+    let lastMonth = DateTime.now().minus({ month: 1 });//TODO Utiliser ces dates la pour le calculs de la dettes de sommeil
+    let monthIndex = lastTwoWeek;
 
     let promiseList = [];
 
-    while (monthIndex.toLocaleString() !== nextMonth.toLocaleString()) {
+    while (monthIndex.toLocaleString() !== nextTwoWeek.toLocaleString()) {
         let ISO =  monthIndex.toISODate();
+        let isDisplayed = (monthIndex >= lastTwoWeek);
+        let isNow = (monthIndex.toISODate() == now.toISODate());
 
         let sleepScheduleCollection = collection(db, "sleep-schedule");
         let sleepScheduleQuery = query(sleepScheduleCollection, where("uid", "==", user.uid), where("ISO", "==", ISO));
         
         let querySnapshot = getDocs(sleepScheduleQuery);
 
-        querySnapshot.getISO = () => {
-            return ISO;
+        querySnapshot.getDisplayInformations = () => {
+            return {
+                ISO: ISO,
+                isDisplayed: isDisplayed,
+                isNow: isNow
+            };
         };
 
         promiseList.push(querySnapshot);
@@ -220,24 +243,24 @@ function initDateList() {
         var i = 0;
 
         responses.forEach(snapshot => {
-            let ISO = promiseList[i].getISO();
+            let displayInformations = promiseList[i].getDisplayInformations();
             if (!snapshot.empty) {
                 snapshot.forEach((doc) => 
                     datas = doc.data()
                 );
 
                 currentDate = {
-                    uid: user.uid, 
+                    uid: user.uid,
                     dateTime: monthIndex,
-                    ISO: ISO,
+                    displayInformations: displayInformations,
                     sleep_time: datas.sleep_time,
                     wake_time: datas.wake_time
                 };
             } else {
                 currentDate = {
-                    uid: user.uid, 
+                    uid: user.uid,
                     dateTime: monthIndex,
-                    ISO: ISO,
+                    displayInformations: displayInformations,
                     sleep_time: "sleep",
                     wake_time: "wake"
                 };
@@ -246,34 +269,66 @@ function initDateList() {
             dateList.push(currentDate);
         });
 
-        // promiseList.forEach(promise => {
-        //     promise.then((snapshot) => {
-        //         if (!snapshot.empty) {
-                    
-        //             snapshot.forEach((doc) => 
-        //                 datas = doc.data()
-        //             );
-    
-        //             currentDate = {
-        //                 uid: user.uid, 
-        //                 dateTime: monthIndex,
-        //                 ISO: promise.getISO(),
-        //                 sleep_time: datas.sleep_time,
-        //                 wake_time: datas.wake_time
-        //             };
-        //         } else {
-        //             currentDate = {
-        //                 uid: user.uid, 
-        //                 dateTime: monthIndex,
-        //                 ISO: promise.getISO(),
-        //                 sleep_time: "sleep",
-        //                 wake_time: "wake"
-        //             };
-        //         }
-        //         // console.log(currentDate);
-        //         dateList.push(currentDate);
-        //     });
-        // });
-        console.log(dateList);
+        displayDateList();
     });
+
+}
+
+/**
+ * Display the date list
+ */
+function displayDateList() {
+    var i = 0;
+
+    /**
+     * Create the list of li 
+     */
+    dateList.forEach(date => {
+        if (date.displayInformations.isDisplayed) {
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.innerHTML = date.displayInformations.ISO;
+            
+            if ((currentDateIndex == null && date.displayInformations.isNow) || i == currentDateIndex) {
+                a.style.color = "magenta"
+                if (currentDateIndex == null) {
+                    currentDateIndex = i;
+                }
+            }
+
+            li.appendChild(a);
+            sleepingScheduleList.appendChild(li);
+
+            i++;
+        }
+    });
+
+    /**
+     * Display the sleep and wake time for the current date
+     */
+    let sleep_time = dateList[currentDateIndex].sleep_time;
+    let wake_time = dateList[currentDateIndex].wake_time;
+
+    if (validateHourField(sleep_time)) {
+        inputScheduleSleepTime.value = dateList[currentDateIndex].sleep_time;
+    } else  {
+        inputScheduleSleepTime.value = null;
+        inputScheduleSleepTime.style.color = "red";
+    }
+
+    if (validateHourField(wake_time)) {
+        inputScheduleWakeTime.value = dateList[currentDateIndex].wake_time;
+    } else  {
+        inputScheduleWakeTime.value = null;
+        inputScheduleWakeTime.style.color = "red";
+    }
+    
+    console.log(dateList[currentDateIndex])
+}
+
+/**
+ * Save all the date in database if changed
+ */
+function saveDateList() {
+
 }
