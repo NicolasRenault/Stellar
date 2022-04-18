@@ -87,6 +87,7 @@ editUserSettings.onclick = () => {
     } catch (e) {
         console.error("Error adding document: ", e);
     }
+
 }
 
 /** ------------
@@ -239,17 +240,20 @@ function initDateList() {
     
     Promise.all(promiseList).then((responses) => {
         var currentDate;
-        var datas = {};
+        
         var i = 0;
 
         responses.forEach(snapshot => {
+            let datas = {};
             let displayInformations = promiseList[i].getDisplayInformations();
             if (!snapshot.empty) {
-                snapshot.forEach((doc) => 
-                    datas = doc.data()
+                snapshot.forEach((doc) =>{
+                        datas = doc.data();
+                        datas.id = doc.id;
+                    }
                 );
-
                 currentDate = {
+                    dbId: datas.id,
                     uid: user.uid,
                     dateTime: monthIndex,
                     displayInformations: displayInformations,
@@ -258,11 +262,12 @@ function initDateList() {
                 };
             } else {
                 currentDate = {
+                    dbId: undefined,
                     uid: user.uid,
                     dateTime: monthIndex,
                     displayInformations: displayInformations,
-                    sleep_time: "sleep",
-                    wake_time: "wake"
+                    sleep_time: "00:00",
+                    wake_time: "00:00"
                 };
             }
             i++;
@@ -322,13 +327,33 @@ function displayDateList() {
         inputScheduleWakeTime.value = null;
         inputScheduleWakeTime.style.color = "red";
     }
-    
-    console.log(dateList[currentDateIndex])
 }
 
 /**
  * Save all the date in database if changed
  */
 function saveDateList() {
-
+    dateList.forEach((date) => {
+        if (validateHourField(date.sleep_time) && validateHourField(date.wake_time)) {
+            try {
+                if (date.dbId != undefined) {
+                    setDoc(doc(db, "sleep-schedule", date.dbId), {
+                        uid: user.uid,
+                        ISO: date.displayInformations.ISO,
+                        sleep_time: date.sleep_time,
+                        wake_time: date.wake_time,
+                    });
+                } else {
+                    addDoc(collection(db, "sleep-schedule"), {
+                        uid: user.uid,
+                        ISO: date.displayInformations.ISO,
+                        sleep_time: date.sleep_time,
+                        wake_time: date.wake_time,
+                    });
+                }
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+    });
 }
