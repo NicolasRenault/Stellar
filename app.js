@@ -41,6 +41,7 @@ const inputWeekSleepTime = document.getElementById('input_week_sleep_time');
 const inputWeekWakeTime = document.getElementById('input_week_wake_time');
 const inputWeekendSleepTime = document.getElementById('input_weekend_sleep_time');
 const inputWeekendWakeTime = document.getElementById('input_weekend_wake_time');
+const selectHourOfSleep = document.getElementById('select_hour_of_sleep');
 const sleepingScheduleList = document.getElementById('sleeping_schedule');
 const inputScheduleSleepTime = document.getElementById('input_schedule_sleep_time');
 const inputScheduleWakeTime = document.getElementById('input_schedule_wake_time');
@@ -82,6 +83,7 @@ editUserSettings.onclick = () => {
             week_wake_time : formateHourField(inputWeekWakeTime.value),
             weekend_sleep_time : formateHourField(inputWeekendSleepTime.value),
             weekend_wake_time : formateHourField(inputWeekendWakeTime.value),
+            hour_of_sleep : validateHourSleepNeeded(selectHourOfSleep.value),
         });
         console.log("Users settings has been saved for user : ", user.displayName);
     } catch (e) {
@@ -127,11 +129,13 @@ function getUserSettings() {
             inputWeekWakeTime.value = formatHourForInput(settingsData.week_wake_time);
             inputWeekendSleepTime.value = formatHourForInput(settingsData.weekend_sleep_time);
             inputWeekendWakeTime.value = formatHourForInput(settingsData.weekend_wake_time);
+            selectHourOfSleep.value = validateHourSleepNeeded(settingsData.hour_of_sleep);
         } else {
             inputWeekSleepTime.value = "00:00";
             inputWeekWakeTime.value = "00:00";
             inputWeekendSleepTime.value = "00:00"
             inputWeekendWakeTime.value = "00:00";
+            selectHourOfSleep.value = "7";
         }
     });
 
@@ -188,6 +192,22 @@ function formateHourField(value) {
 function validateHourField(value) {
     let regex = /^0[0-9]|1[0-9]|2[0-3]:[0-5][0-9] to 0[0-9]|1[0-9]|2[0-3]:[0-5][0-9]$/;
     return regex.test(value);
+}
+
+/**
+ * Validate if the value passed in parameter is in the ["6", "7", "8"], if true return the value else return "7" (default value)
+ * 
+ * @param {String} value 
+ * @returns String
+ */
+function validateHourSleepNeeded(value) {
+    let choices = ["6", "7", "8"];
+
+    if (choices.includes(value)) {
+        return value;
+    } else {
+        return "7";
+    }
 }
 
 /**
