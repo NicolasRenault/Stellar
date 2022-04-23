@@ -45,6 +45,8 @@ const selectHourOfSleep = document.getElementById('select_hour_of_sleep');
 const sleepingScheduleList = document.getElementById('sleeping_schedule');
 const inputScheduleSleepTime = document.getElementById('input_schedule_sleep_time');
 const inputScheduleWakeTime = document.getElementById('input_schedule_wake_time');
+const previousBtn = document.getElementById('previous_btn');
+const nextBtn = document.getElementById('next_btn');
 
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.log('error'));
 signOutBtn.onclick = () => signOut(auth);
@@ -89,8 +91,10 @@ editUserSettings.onclick = () => {
     } catch (e) {
         console.error("Error adding document: ", e);
     }
-
 }
+
+previousBtn.addEventListener("click", previousDate);
+nextBtn.addEventListener("click", nextDate);
 
 /** ------------
  * 
@@ -278,7 +282,8 @@ function initDateList() {
                     dateTime: monthIndex,
                     displayInformations: displayInformations,
                     sleep_time: datas.sleep_time,
-                    wake_time: datas.wake_time
+                    wake_time: datas.wake_time,
+                    asChanged: false,
                 };
             } else {
                 currentDate = {
@@ -287,7 +292,8 @@ function initDateList() {
                     dateTime: monthIndex,
                     displayInformations: displayInformations,
                     sleep_time: "00:00",
-                    wake_time: "00:00"
+                    wake_time: "00:00",
+                    asChanged: false,
                 };
             }
             i++;
@@ -314,8 +320,10 @@ function displayDateList() {
             var a = document.createElement("a");
             a.innerHTML = date.displayInformations.ISO;
             
+            li.classList.add("date");
+            li.classList.add(i);
+
             if ((currentDateIndex == null && date.displayInformations.isNow) || i == currentDateIndex) {
-                a.style.color = "magenta"
                 if (currentDateIndex == null) {
                     currentDateIndex = i;
                 }
@@ -327,6 +335,57 @@ function displayDateList() {
             i++;
         }
     });
+
+    selectDate(currentDateIndex);
+}
+
+/**
+ * Save all the date in database if changed
+ */
+function saveDateList() {
+    dateList.forEach((date) => {
+        if (date.asChanged && validateHourField(date.sleep_time) && validateHourField(date.wake_time)) {
+            try {
+                if (date.dbId != undefined) {
+                    setDoc(doc(db, "sleep-schedule", date.dbId), {
+                        uid: user.uid,
+                        ISO: date.displayInformations.ISO,
+                        sleep_time: date.sleep_time,
+                        wake_time: date.wake_time,
+                    });
+                } else {
+                    addDoc(collection(db, "sleep-schedule"), {
+                        uid: user.uid,
+                        ISO: date.displayInformations.ISO,
+                        sleep_time: date.sleep_time,
+                        wake_time: date.wake_time,
+                    });
+                }
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+
+            date.asChanged = false;
+        }
+    });
+}
+
+/**
+ * Select the date ate the index in parameter and display it 
+ * 
+ * @param {int} index 
+ */
+function selectDate(index) {
+
+    //Remove all class current 
+    let currents = document.getElementsByClassName("date current")
+    Array.prototype.forEach.call(currents, (el) => {
+        el.classList.remove("current");
+    });
+
+    //Add the class "current" for the current date
+    let currentLi = document.getElementsByClassName("date " + index)[0];
+    currentLi.classList.add("current");
 
     /**
      * Display the sleep and wake time for the current date
@@ -350,30 +409,23 @@ function displayDateList() {
 }
 
 /**
- * Save all the date in database if changed
+ * Change the current date for the previous one
  */
-function saveDateList() {
-    dateList.forEach((date) => {
-        if (validateHourField(date.sleep_time) && validateHourField(date.wake_time)) {
-            try {
-                if (date.dbId != undefined) {
-                    setDoc(doc(db, "sleep-schedule", date.dbId), {
-                        uid: user.uid,
-                        ISO: date.displayInformations.ISO,
-                        sleep_time: date.sleep_time,
-                        wake_time: date.wake_time,
-                    });
-                } else {
-                    addDoc(collection(db, "sleep-schedule"), {
-                        uid: user.uid,
-                        ISO: date.displayInformations.ISO,
-                        sleep_time: date.sleep_time,
-                        wake_time: date.wake_time,
-                    });
-                }
-            } catch (e) {
-                console.error("Error adding document: ", e);
-            }
-        }
-    });
+function previousDate() {
+    if (currentDateIndex > 0) {
+        currentDateIndex--;
+
+        selectDate(currentDateIndex);
+    }
+}
+
+/**
+ * Change the current date for the next one
+ */
+function nextDate() {
+    if (currentDateIndex < dateList.length - 1) {
+        currentDateIndex++;
+
+        selectDate(currentDateIndex);
+    }
 }
