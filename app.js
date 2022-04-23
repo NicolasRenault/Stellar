@@ -45,6 +45,7 @@ const selectHourOfSleep = document.getElementById('select_hour_of_sleep');
 const sleepingScheduleList = document.getElementById('sleeping_schedule');
 const inputScheduleSleepTime = document.getElementById('input_schedule_sleep_time');
 const inputScheduleWakeTime = document.getElementById('input_schedule_wake_time');
+const validateScheduleHoursBtn = document.getElementById('validate_schedule_btn');
 const previousBtn = document.getElementById('previous_btn');
 const nextBtn = document.getElementById('next_btn');
 
@@ -93,6 +94,10 @@ editUserSettings.onclick = () => {
     }
 }
 
+//TODO Find a way to save one if unfocused AND if the 4th number changed (not each time)
+inputScheduleSleepTime.addEventListener("change", dateHourChanged);
+inputScheduleWakeTime.addEventListener("change", dateHourChanged);
+validateScheduleHoursBtn.addEventListener("click", saveDateList);
 previousBtn.addEventListener("click", previousDate);
 nextBtn.addEventListener("click", nextDate);
 
@@ -239,7 +244,7 @@ function initDateList() {
     let monthIndex = lastTwoWeek;
 
     let promiseList = [];
-
+    //TODO optimiser les querys pour en avoir qu'une seule au lieu de log(n)
     while (monthIndex.toLocaleString() !== nextTwoWeek.toLocaleString()) {
         let ISO =  monthIndex.toISODate();
         let isDisplayed = (monthIndex >= lastTwoWeek);
@@ -345,6 +350,7 @@ function displayDateList() {
 function saveDateList() {
     dateList.forEach((date) => {
         if (date.asChanged && validateHourField(date.sleep_time) && validateHourField(date.wake_time)) {
+            console.log(date);
             try {
                 if (date.dbId != undefined) {
                     setDoc(doc(db, "sleep-schedule", date.dbId), {
@@ -364,7 +370,6 @@ function saveDateList() {
             } catch (e) {
                 console.error("Error adding document: ", e);
             }
-
             date.asChanged = false;
         }
     });
@@ -428,4 +433,15 @@ function nextDate() {
 
         selectDate(currentDateIndex);
     }
+}
+
+/**
+ * Set the asChanged value as true and the values from inputs for the current date
+ */
+function dateHourChanged() {
+    console.log("yes");
+    let currentDate = dateList[currentDateIndex];
+    currentDate.sleep_time = inputScheduleSleepTime.value;
+    currentDate.wake_time = inputScheduleWakeTime.value;
+    currentDate.asChanged = true;
 }
