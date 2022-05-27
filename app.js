@@ -239,13 +239,13 @@ function formatHourForInput(hour) {
 function initDateList() {
     let now = DateTime.now();
     let lastTwoWeek = DateTime.now().minus({day: 15});
-    let nextTwoWeek = DateTime.now().plus({day: 15});
+    let tomorrow = DateTime.now().plus({day: 1});
     let lastMonth = DateTime.now().minus({ month: 1 });//TODO Utiliser ces dates la pour le calculs de la dettes de sommeil
     let monthIndex = lastTwoWeek;
 
     let promiseList = [];
-    //TODO optimiser les querys pour en avoir qu'une seule au lieu de log(n)
-    while (monthIndex.toLocaleString() !== nextTwoWeek.toLocaleString()) {
+
+    while (monthIndex.toLocaleString() !== tomorrow.toLocaleString()) {
         let ISO =  monthIndex.toISODate();
         let isDisplayed = (monthIndex >= lastTwoWeek);
         let isNow = (monthIndex.toISODate() == now.toISODate());
@@ -266,7 +266,7 @@ function initDateList() {
         promiseList.push(querySnapshot);
         monthIndex = monthIndex.plus({ day: 1 });
     }
-    
+
     Promise.all(promiseList).then((responses) => {
         var currentDate;
         
@@ -307,7 +307,6 @@ function initDateList() {
 
         displayDateList();
     });
-
 }
 
 /**
@@ -350,7 +349,6 @@ function displayDateList() {
 function saveDateList() {
     dateList.forEach((date) => {
         if (date.asChanged && validateHourField(date.sleep_time) && validateHourField(date.wake_time)) {
-            console.log(date);
             try {
                 if (date.dbId != undefined) {
                     setDoc(doc(db, "sleep-schedule", date.dbId), {
@@ -439,7 +437,6 @@ function nextDate() {
  * Set the asChanged value as true and the values from inputs for the current date
  */
 function dateHourChanged() {
-    console.log("yes");
     let currentDate = dateList[currentDateIndex];
     currentDate.sleep_time = inputScheduleSleepTime.value;
     currentDate.wake_time = inputScheduleWakeTime.value;
