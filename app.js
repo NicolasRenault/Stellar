@@ -1,8 +1,10 @@
-import './style.css'
+import './assets/css/style.css'
+import './assets/css/tiny-slider.css'
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
 import { getFirestore, collection, addDoc, setDoc, doc, getDoc, query, where, getDocs} from "firebase/firestore";
 import { DateTime } from "luxon";
+import { tns } from "tiny-slider";
 
 
 /** ------------
@@ -94,11 +96,10 @@ editUserSettings.onclick = () => {
     }
 }
 
-//TODO Find a way to save one if unfocused AND if the 4th number changed (not each time)
 inputScheduleSleepTime.addEventListener("change", dateHourChanged);
 inputScheduleWakeTime.addEventListener("change", dateHourChanged);
-validateScheduleHoursBtn.addEventListener("click", saveDateList);
-previousBtn.addEventListener("click", previousDate);
+validateScheduleHoursBtn.addEventListener("click", saveDateList);//TODO Find a way to save one if unfocused AND if the 4th number changed (not each time)
+previousBtn.addEventListener("click", previousDate);//TODO move the slider with the current 
 nextBtn.addEventListener("click", nextDate);
 
 /** ------------
@@ -236,6 +237,12 @@ function formatHourForInput(hour) {
 /**
  * Init the date list beetween the last month and the next 15 days, with database value if found
  */
+/* 
+TODO Revoir toute la méthode :
+TODO 1) récupérer TOUTES les données pour l'utilisateur courant
+TODO Si il y a des données, utiliser la date la plus ancienne comme date de départ. Sinon date de départ = lastTwoWeek
+TODO Boucle while jusqu'à aujourd'hui (+ x jour pour faire un multiple de 7)
+*/
 function initDateList() {
     let now = DateTime.now();
     let lastTwoWeek = DateTime.now().minus({day: 15});
@@ -263,7 +270,7 @@ function initDateList() {
             };
         };
 
-        promiseList.push(querySnapshot);
+        promiseList.push(querySnapshot); 
         monthIndex = monthIndex.plus({ day: 1 });
     }
 
@@ -318,14 +325,14 @@ function displayDateList() {
     /**
      * Create the list of li 
      */
-    dateList.forEach(date => {
+    dateList.forEach(date => { //TODO append by group of 7
         if (date.displayInformations.isDisplayed) {
-            var li = document.createElement("li");
+            var div = document.createElement("div");
             var a = document.createElement("a");
             a.innerHTML = date.displayInformations.ISO;
             
-            li.classList.add("date");
-            li.classList.add(i);
+            div.classList.add("date");
+            div.classList.add(i);
 
             if ((currentDateIndex == null && date.displayInformations.isNow) || i == currentDateIndex) {
                 if (currentDateIndex == null) {
@@ -333,11 +340,22 @@ function displayDateList() {
                 }
             }
 
-            li.appendChild(a);
-            sleepingScheduleList.appendChild(li);
+            div.appendChild(a);
+            sleepingScheduleList.appendChild(div);
 
             i++;
         }
+    });
+
+    let slider = tns({ //TODO maybe move this to be global
+        container: "#sleeping_schedule",
+        loop: false,
+        items: 7,
+        //TODO add startIndex
+        mouseDrag: true,
+        slideBy: "page",
+        swipeAngle: false,
+        speed: 400
     });
 
     selectDate(currentDateIndex);
