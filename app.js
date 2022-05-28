@@ -1,8 +1,8 @@
 import './assets/css/style.css'
 import './assets/css/tiny-slider.css'
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
-import { getFirestore, collection, addDoc, setDoc, doc, getDoc, query, where, getDocs} from "firebase/firestore";
+import { confirmPasswordReset, getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
+import { getFirestore, collection, addDoc, setDoc, doc, getDoc, query, where, getDocs, orderBy} from "firebase/firestore";
 import { DateTime } from "luxon";
 import { tns } from "tiny-slider";
 
@@ -237,64 +237,63 @@ function formatHourForInput(hour) {
 /**
  * Init the date list beetween the last month and the next 15 days, with database value if found
  */
-/* 
-TODO Revoir toute la méthode :
-TODO 1) récupérer TOUTES les données pour l'utilisateur courant
-TODO Si il y a des données, utiliser la date la plus ancienne comme date de départ. Sinon date de départ = lastTwoWeek
-TODO Boucle while jusqu'à aujourd'hui (+ x jour pour faire un multiple de 7)
-*/
 function initDateList() {
     let now = DateTime.now();
-    let lastTwoWeek = DateTime.now().minus({day: 15});
-    let tomorrow = DateTime.now().plus({day: 1});
+    let lastTwoWeek = DateTime.now().minus({day: 15}).startOf("week");
     let lastMonth = DateTime.now().minus({ month: 1 });//TODO Utiliser ces dates la pour le calculs de la dettes de sommeil
-    let monthIndex = lastTwoWeek;
+    let monthIndex;
 
-    let promiseList = [];
+    let firebaseDatas = [];
 
-    while (monthIndex.toLocaleString() !== tomorrow.toLocaleString()) {
-        let ISO =  monthIndex.toISODate();
-        let isDisplayed = (monthIndex >= lastTwoWeek);
-        let isNow = (monthIndex.toISODate() == now.toISODate());
+    let sleepScheduleCollection = collection(db, "sleep-schedule");
+    let sleepScheduleQuery = query(sleepScheduleCollection, where("uid", "==", user.uid), orderBy("ISO"));
+    let querySnapshot = getDocs(sleepScheduleQuery);
 
-        let sleepScheduleCollection = collection(db, "sleep-schedule");
-        let sleepScheduleQuery = query(sleepScheduleCollection, where("uid", "==", user.uid), where("ISO", "==", ISO));
-        
-        let querySnapshot = getDocs(sleepScheduleQuery);
+    querySnapshot.then((response) => {
+        let firstDate = false;
+        response.forEach((doc) => {
+            if (!firstDate) {
+                firstDate = doc.data().ISO;
+            }
+            firebaseDatas[doc.data().ISO] = {id: doc.id, ...doc.data()};
+        })
 
-        querySnapshot.getDisplayInformations = () => {
-            return {
-                ISO: ISO,
-                isDisplayed: isDisplayed,
-                isNow: isNow
+        if (response.empty) {
+            monthIndex = lastTwoWeek;
+        } else {
+            let firstDatabaseDate = DateTime.fromISO(firebaseDatas[firstDate].ISO).startOf('week');
+
+            if (firstDatabaseDate > lastTwoWeek) {
+                monthIndex = lastTwoWeek;
+            } else {
+                monthIndex = firstDatabaseDate;
+            }
+        }
+
+        let daysBetween = now.diff(monthIndex, "day").days;
+        let endDate = monthIndex.plus({ day: roundUpToMultOf7(daysBetween)});
+
+        while (monthIndex.toLocaleString() !== endDate.toLocaleString()) {
+            let ISO =  monthIndex.toISODate();
+            let isDisplayed = true;
+            let isNow = (monthIndex.toISODate() == now.toISODate());
+
+            let displayInformations = {
+                    ISO: ISO,
+                    isDisplayed: isDisplayed,
+                    isNow: isNow
             };
-        };
 
-        promiseList.push(querySnapshot); 
-        monthIndex = monthIndex.plus({ day: 1 });
-    }
+            let currentDate;
 
-    Promise.all(promiseList).then((responses) => {
-        var currentDate;
-        
-        var i = 0;
-
-        responses.forEach(snapshot => {
-            let datas = {};
-            let displayInformations = promiseList[i].getDisplayInformations();
-            if (!snapshot.empty) {
-                snapshot.forEach((doc) =>{
-                        datas = doc.data();
-                        datas.id = doc.id;
-                    }
-                );
+            if (firebaseDatas[ISO] != undefined) {
                 currentDate = {
-                    dbId: datas.id,
+                    dbId: firebaseDatas[ISO].id,
                     uid: user.uid,
                     dateTime: monthIndex,
-                    displayInformations: displayInformations,
-                    sleep_time: datas.sleep_time,
-                    wake_time: datas.wake_time,
+                    displayInformations: {...displayInformations, inDatabase: true},
+                    sleep_time: firebaseDatas[ISO].sleep_time,
+                    wake_time: firebaseDatas[ISO].wake_time,
                     asChanged: false,
                 };
             } else {
@@ -302,15 +301,16 @@ function initDateList() {
                     dbId: undefined,
                     uid: user.uid,
                     dateTime: monthIndex,
-                    displayInformations: displayInformations,
+                    displayInformations: {...displayInformations, inDatabase: false},
                     sleep_time: "00:00",
                     wake_time: "00:00",
                     asChanged: false,
                 };
             }
-            i++;
+            
             dateList.push(currentDate);
-        });
+            monthIndex = monthIndex.plus({ day: 1 });
+        };
 
         displayDateList();
     });
@@ -325,7 +325,7 @@ function displayDateList() {
     /**
      * Create the list of li 
      */
-    dateList.forEach(date => { //TODO append by group of 7
+    dateList.forEach(date => { //TODO append by group of 7 for the mouse drag
         if (date.displayInformations.isDisplayed) {
             var div = document.createElement("div");
             var a = document.createElement("a");
@@ -347,11 +347,14 @@ function displayDateList() {
         }
     });
 
+    /**
+     * Tiny slider init
+     */
     let slider = tns({ //TODO maybe move this to be global
         container: "#sleeping_schedule",
         loop: false,
         items: 7,
-        //TODO add startIndex
+        startIndex: i,
         mouseDrag: true,
         slideBy: "page",
         swipeAngle: false,
@@ -459,4 +462,19 @@ function dateHourChanged() {
     currentDate.sleep_time = inputScheduleSleepTime.value;
     currentDate.wake_time = inputScheduleWakeTime.value;
     currentDate.asChanged = true;
+}
+
+/**
+ * Round n up to the nearest multiple of 7 
+ * 
+ * @param {int} n number to round
+ * @returns int
+ */
+function roundUpToMultOf7(n) {
+    if(n > 0)
+        return Math.ceil(n/7.0) * 7;
+    else if( n < 0)
+        return Math.floor(n/7.0) * 7;
+    else
+        return 7;
 }
