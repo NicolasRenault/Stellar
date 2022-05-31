@@ -1,2 +1,2 @@
 # Stellar
-Sleep dept calculator that help you to find when to go to sleep.
+Sleep dept calculator that help you to find the right time to go to sleep.
