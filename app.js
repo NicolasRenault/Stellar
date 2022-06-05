@@ -60,6 +60,7 @@ let unsubscribe;
 let dateList = [];
 let currentDateIndex = null;
 
+let slider;
 
 /** ------------
  * 
@@ -99,7 +100,7 @@ editUserSettings.onclick = () => {
 inputScheduleSleepTime.addEventListener("change", dateHourChanged);
 inputScheduleWakeTime.addEventListener("change", dateHourChanged);
 validateScheduleHoursBtn.addEventListener("click", saveDateList);//TODO Find a way to save one if unfocused AND if the 4th number changed (not each time)
-previousBtn.addEventListener("click", previousDate);//TODO move the slider with the current 
+previousBtn.addEventListener("click", previousDate);
 nextBtn.addEventListener("click", nextDate);
 
 /** ------------
@@ -321,14 +322,14 @@ function initDateList() {
  */
 function displayDateList() {
     var i = 0;
-
+    var groupDiv = document.createElement("div");
     /**
      * Create the list of li 
      */
-    dateList.forEach(date => { //TODO append by group of 7 for the mouse drag
+    dateList.forEach(date => {
         if (date.displayInformations.isDisplayed) {
             var div = document.createElement("div");
-            var a = document.createElement("a");
+            var a = document.createElement("a");  //TODO Transformer en btn
             a.innerHTML = date.displayInformations.ISO;
             
             div.classList.add("date");
@@ -341,8 +342,11 @@ function displayDateList() {
             }
 
             div.appendChild(a);
-            sleepingScheduleList.appendChild(div);
-
+            groupDiv.appendChild(div);
+            if (!((i + 1) % 7)) {
+                sleepingScheduleList.appendChild(groupDiv);
+                groupDiv = document.createElement("div");
+            }
             i++;
         }
     });
@@ -350,11 +354,11 @@ function displayDateList() {
     /**
      * Tiny slider init
      */
-    let slider = tns({ //TODO maybe move this to be global
+    slider = tns({
         container: "#sleeping_schedule",
         loop: false,
-        items: 7,
-        startIndex: i,
+        items: 1,
+        startIndex: i / 7,
         mouseDrag: true,
         slideBy: "page",
         swipeAngle: false,
@@ -438,9 +442,13 @@ function selectDate(index) {
 function previousDate() {
     if (currentDateIndex > 0) {
         currentDateIndex--;
-
         selectDate(currentDateIndex);
+
+        if (Math.ceil((currentDateIndex + 1) / 7) != slider.getInfo().displayIndex) {
+            slider.goTo("prev");
+        }
     }
+
 }
 
 /**
@@ -451,6 +459,9 @@ function nextDate() {
         currentDateIndex++;
 
         selectDate(currentDateIndex);
+        if (Math.ceil((currentDateIndex + 1) / 7) != slider.getInfo().displayIndex) {
+            slider.goTo("next");
+        }
     }
 }
 
@@ -478,3 +489,6 @@ function roundUpToMultOf7(n) {
     else
         return 7;
 }
+
+
+//TODO créer une fonction on clique sur la date pour la sélectionner
