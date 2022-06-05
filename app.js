@@ -453,6 +453,7 @@ function selectDate(index) {
  * Change the current date for the previous one
  */
 function previousDate() {
+    slider.goTo(slider.getInfo().displayIndex);
     if (currentDateIndex > 0) {
         currentDateIndex--;
         selectDate(currentDateIndex);
@@ -468,6 +469,7 @@ function previousDate() {
  * Change the current date for the next one
  */
 function nextDate() {
+    slider.goTo(slider.getInfo().displayIndex);
     if (currentDateIndex < dateList.length - 1) {
         currentDateIndex++;
 
