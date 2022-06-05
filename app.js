@@ -453,7 +453,7 @@ function selectDate(index) {
  * Change the current date for the previous one
  */
 function previousDate() {
-    slider.goTo(slider.getInfo().displayIndex);
+    slider.goTo(Math.ceil((currentDateIndex) / 7));
     if (currentDateIndex > 0) {
         currentDateIndex--;
         selectDate(currentDateIndex);
@@ -469,7 +469,7 @@ function previousDate() {
  * Change the current date for the next one
  */
 function nextDate() {
-    slider.goTo(slider.getInfo().displayIndex);
+    slider.goTo(Math.ceil((currentDateIndex) / 7));
     if (currentDateIndex < dateList.length - 1) {
         currentDateIndex++;
 
@@ -531,6 +531,3 @@ function roundUpToMultOf7(n) {
     else
         return 7;
 }
-
-
-//TODO créer une fonction on clique sur la date pour la sélectionner
