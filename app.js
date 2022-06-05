@@ -51,6 +51,8 @@ const validateScheduleHoursBtn = document.getElementById('validate_schedule_btn'
 const previousBtn = document.getElementById('previous_btn');
 const nextBtn = document.getElementById('next_btn');
 
+let dateBtn;
+
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.log('error'));
 signOutBtn.onclick = () => signOut(auth);
 
@@ -178,6 +180,7 @@ function logoutUser() {
     dateList = [];
 
     resetUserSettings();
+    //TODO empty all users sections
 }
 
 /**
@@ -323,15 +326,22 @@ function initDateList() {
 function displayDateList() {
     var i = 0;
     var groupDiv = document.createElement("div");
+    var rowDiv = document.createElement("div");
+    rowDiv.classList.add("row");
+    groupDiv.appendChild(rowDiv);
     /**
      * Create the list of li 
      */
     dateList.forEach(date => {
         if (date.displayInformations.isDisplayed) {
             var div = document.createElement("div");
-            var a = document.createElement("a");  //TODO Transformer en btn
-            a.innerHTML = date.displayInformations.ISO;
-            
+            var btn = document.createElement("button");
+            btn.dataset.date = btn.innerHTML = date.displayInformations.ISO;
+
+            btn.onclick = () => {
+                goToDate(date.displayInformations.ISO);
+            }
+
             div.classList.add("date");
             div.classList.add(i);
 
@@ -341,11 +351,14 @@ function displayDateList() {
                 }
             }
 
-            div.appendChild(a);
-            groupDiv.appendChild(div);
+            div.appendChild(btn);
+            rowDiv.appendChild(div);
             if (!((i + 1) % 7)) {
                 sleepingScheduleList.appendChild(groupDiv);
                 groupDiv = document.createElement("div");
+                rowDiv = document.createElement("div");
+                rowDiv.classList.add("row");
+                groupDiv.appendChild(rowDiv);
             }
             i++;
         }
@@ -418,18 +431,18 @@ function selectDate(index) {
     /**
      * Display the sleep and wake time for the current date
      */
-    let sleep_time = dateList[currentDateIndex].sleep_time;
-    let wake_time = dateList[currentDateIndex].wake_time;
+    let sleep_time = dateList[index].sleep_time;
+    let wake_time = dateList[index].wake_time;
 
     if (validateHourField(sleep_time)) {
-        inputScheduleSleepTime.value = dateList[currentDateIndex].sleep_time;
+        inputScheduleSleepTime.value = dateList[index].sleep_time;
     } else  {
         inputScheduleSleepTime.value = null;
         inputScheduleSleepTime.style.color = "red";
     }
 
     if (validateHourField(wake_time)) {
-        inputScheduleWakeTime.value = dateList[currentDateIndex].wake_time;
+        inputScheduleWakeTime.value = dateList[index].wake_time;
     } else  {
         inputScheduleWakeTime.value = null;
         inputScheduleWakeTime.style.color = "red";
@@ -473,6 +486,33 @@ function dateHourChanged() {
     currentDate.sleep_time = inputScheduleSleepTime.value;
     currentDate.wake_time = inputScheduleWakeTime.value;
     currentDate.asChanged = true;
+}
+
+/**
+ * Set the selected date and move the slider to the one passed in parameter 
+ * 
+ * @param {String} date 
+ */
+function goToDate(date) {
+    let index = currentDateIndex = getIndexByDate(date);
+    selectDate(index);
+    slider.goTo(Math.ceil((currentDateIndex + 1) /7) - 1);
+}
+
+/**
+ * Get the index of the dateList array by the date in parameter
+ * 
+ * @param {String} date 
+ * @see dateList
+ */
+function getIndexByDate(date) {
+    for (let i = 0; i < dateList.length; i++) {
+        if (dateList[i].displayInformations.ISO == date) {
+            return i;
+        }
+    }
+
+    return undefined;
 }
 
 /**
