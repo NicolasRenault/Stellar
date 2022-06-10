@@ -53,8 +53,8 @@ const nextBtn = document.getElementById('next_btn');
 
 let dateBtn;
 
-signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.log('error'));
-signOutBtn.onclick = () => {signOut(auth); location.reload()} //TODO Check if the reaload don't take too much ressources instead of using logoutUser()
+signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.error(error));
+signOutBtn.onclick = () => {signOut(auth); location.reload()} //! Warning change if the reaload don't take too much ressources instead of using logoutUser()
 
 let user;
 let unsubscribe;
