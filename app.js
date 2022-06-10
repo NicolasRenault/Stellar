@@ -54,7 +54,7 @@ const nextBtn = document.getElementById('next_btn');
 let dateBtn;
 
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.log('error'));
-signOutBtn.onclick = () => signOut(auth);
+signOutBtn.onclick = () => {signOut(auth); location.reload()} //TODO Check if the reaload don't take too much ressources instead of using logoutUser()
 
 let user;
 let unsubscribe;
@@ -75,7 +75,6 @@ auth.onAuthStateChanged(user => {
         loginUser(user);
     } else {
         unsubscribe && unsubscribe();
-        logoutUser();
     }
 });
 
@@ -166,8 +165,12 @@ function resetUserSettings() {
     inputWeekWakeTime.value = "00:00";
     inputWeekendSleepTime.value = "00:00"
     inputWeekendWakeTime.value = "00:00";
+    inputScheduleSleepTime.value = "00:00";
+    inputScheduleWakeTime.value = "00:00";
 
-    userDetails.innerHTML = '';
+    userDetails.replaceChildren();
+    slider != undefined ? slider.destroy() : '';
+    sleepingScheduleList.replaceChildren(); //TODO not working
 }
 
 /**
@@ -180,7 +183,6 @@ function logoutUser() {
     dateList = [];
 
     resetUserSettings();
-    //TODO empty all users sections
 }
 
 /**
