@@ -1,11 +1,10 @@
-import './assets/css/style.css'
-import './assets/css/tiny-slider.css'
+import "./assets/css/style.css"
+import "./assets/css/tiny-slider.css"
 import { initializeApp } from "firebase/app";
-import { confirmPasswordReset, getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
 import { getFirestore, collection, addDoc, setDoc, doc, getDoc, query, where, getDocs, orderBy} from "firebase/firestore";
 import { DateTime } from "luxon";
 import { tns } from "tiny-slider";
-
 
 /** ------------
  * 
@@ -37,30 +36,29 @@ const signInBtn = document.getElementById("signInBtn");
 const signOutBtn = document.getElementById("sign_out_btn");
 const whenSignedIn = document.getElementById("when_signed_in");
 const whenSignedOut = document.getElementById("when_signed_out");
-const userDetails = document.getElementById('user_details');
+const userDetails = document.getElementById("user_details");
 const editUserSettings = document.getElementById("edit_user_settings");
-const inputWeekSleepTime = document.getElementById('input_week_sleep_time');
-const inputWeekWakeTime = document.getElementById('input_week_wake_time');
-const inputWeekendSleepTime = document.getElementById('input_weekend_sleep_time');
-const inputWeekendWakeTime = document.getElementById('input_weekend_wake_time');
-const selectHourOfSleep = document.getElementById('select_hour_of_sleep');
-const sleepingScheduleList = document.getElementById('sleeping_schedule');
-const inputScheduleSleepTime = document.getElementById('input_schedule_sleep_time');
-const inputScheduleWakeTime = document.getElementById('input_schedule_wake_time');
-const validateScheduleHoursBtn = document.getElementById('validate_schedule_btn');
-const previousBtn = document.getElementById('previous_btn');
-const nextBtn = document.getElementById('next_btn');
-
-let dateBtn;
+const inputWeekSleepTime = document.getElementById("input_week_sleep_time");
+const inputWeekWakeTime = document.getElementById("input_week_wake_time");
+const inputWeekendSleepTime = document.getElementById("input_weekend_sleep_time");
+const inputWeekendWakeTime = document.getElementById("input_weekend_wake_time");
+const selectHourOfSleep = document.getElementById("select_hour_of_sleep");
+const sleepingScheduleList = document.getElementById("sleeping_schedule");
+const inputScheduleSleepTime = document.getElementById("input_schedule_sleep_time");
+const inputScheduleWakeTime = document.getElementById("input_schedule_wake_time");
+const validateScheduleHoursBtn = document.getElementById("validate_schedule_btn");
+const previousBtn = document.getElementById("previous_btn");
+const nextBtn = document.getElementById("next_btn");
 
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.error(error));
-signOutBtn.onclick = () => {signOut(auth); location.reload()} //! Warning change if the reaload don't take too much ressources instead of using logoutUser()
+signOutBtn.onclick = () => {signOut(auth); location.reload()} //! Warning change if the reaload take too much ressources instead of using logoutUser()
 
 let user;
 let unsubscribe;
 
 let dateList = [];
 let currentDateIndex = null;
+let sleepDept = 0;
 
 let slider;
 
@@ -122,6 +120,7 @@ function loginUser(loggedUser) {
 
     getUserSettings();
     initDateList();
+    // calculateSleepDept();
 }
 
 /**
@@ -167,9 +166,11 @@ function resetUserSettings() {
     inputWeekendWakeTime.value = "00:00";
     inputScheduleSleepTime.value = "00:00";
     inputScheduleWakeTime.value = "00:00";
+    dateList = [];
+    sleepDept = 0;
 
     userDetails.replaceChildren();
-    slider != undefined ? slider.destroy() : '';
+    slider != undefined ? slider.destroy() : "";
     sleepingScheduleList.replaceChildren(); //TODO not working
 }
 
@@ -180,64 +181,8 @@ function logoutUser() {
     user = null;
     whenSignedIn.hidden = true;
     whenSignedOut.hidden = false;
-    dateList = [];
 
     resetUserSettings();
-}
-
-/**
- * Remove the ":" in an hh:mm format String
- * 
- * @param {String} value 
- * @returns String at format "XXXX" containing;
- */
-function formateHourField(value) {
-    if (value ==  undefined || value == "") {
-        return "0000";
-    } else  {
-        return value.replace(":", "");
-    }
-}
-
-/**
- * Validate if the value passed in parameter is at the format HH:mm
- * 
- * @param {String} value 
- * @returns Bool
- */
-function validateHourField(value) {
-    let regex = /^0[0-9]|1[0-9]|2[0-3]:[0-5][0-9] to 0[0-9]|1[0-9]|2[0-3]:[0-5][0-9]$/;
-    return regex.test(value);
-}
-
-/**
- * Validate if the value passed in parameter is in the ["6", "7", "8"], if true return the value else return "7" (default value)
- * 
- * @param {String} value 
- * @returns String
- */
-function validateHourSleepNeeded(value) {
-    let choices = ["6", "7", "8"];
-
-    if (choices.includes(value)) {
-        return value;
-    } else {
-        return "7";
-    }
-}
-
-/**
- * Add the ":" in an hhmm format String
- * 
- * @param {String} value 
- * @returns String at format "XX:XX" containing;
- */
-function formatHourForInput(hour) {
-    if (hour ==  undefined || hour == "") {
-        return "00:00";
-    } else {
-        return [hour.slice(0, 2), ":" , hour.slice(2)].join('');
-    }
 }
 
 /**
@@ -246,7 +191,6 @@ function formatHourForInput(hour) {
 function initDateList() {
     let now = DateTime.now();
     let lastTwoWeek = DateTime.now().minus({day: 15}).startOf("week");
-    let lastMonth = DateTime.now().minus({ month: 1 });//TODO Utiliser ces dates la pour le calculs de la dettes de sommeil
     let monthIndex;
 
     let firebaseDatas = [];
@@ -267,7 +211,7 @@ function initDateList() {
         if (response.empty) {
             monthIndex = lastTwoWeek;
         } else {
-            let firstDatabaseDate = DateTime.fromISO(firebaseDatas[firstDate].ISO).startOf('week');
+            let firstDatabaseDate = DateTime.fromISO(firebaseDatas[firstDate].ISO).startOf("week");
 
             if (firstDatabaseDate > lastTwoWeek) {
                 monthIndex = lastTwoWeek;
@@ -300,6 +244,7 @@ function initDateList() {
                     displayInformations: {...displayInformations, inDatabase: true},
                     sleep_time: firebaseDatas[ISO].sleep_time,
                     wake_time: firebaseDatas[ISO].wake_time,
+                    sleepingTime: getTimeBetweenHour(firebaseDatas[ISO].sleep_time, firebaseDatas[ISO].wake_time, true),
                     asChanged: false,
                 };
             } else {
@@ -310,6 +255,7 @@ function initDateList() {
                     displayInformations: {...displayInformations, inDatabase: false},
                     sleep_time: "00:00",
                     wake_time: "00:00",
+                    sleepingTime: undefined,
                     asChanged: false,
                 };
             }
@@ -319,6 +265,7 @@ function initDateList() {
         };
 
         displayDateList();
+        calculateSleepDept();
     });
 }
 
@@ -381,6 +328,43 @@ function displayDateList() {
     });
 
     selectDate(currentDateIndex);
+}
+
+/**
+ * Calculate the sleep dept based on the dateList array's data
+ * 
+ * @see dateList
+ * @see sleepDept
+ */
+function calculateSleepDept() { //TODO call this methoed each time you modify a date within the range of day for the calcul (in saveDateList())
+    if (dateList == undefined || dateList.empty) return;
+
+    let range = 7; //? Number of day used to calculate de sleep dept
+    let now = DateTime.now();
+    let startDate = DateTime.now().minus({day: range});
+    let sleepCumul = {hours: 0, minutes: 0}; //TODO global
+    let sleepGoal = (selectHourOfSleep.value ?? 7) * range; //TODO global
+    //TODO add an indicator if you have enough data or not (maybe number of day with date, etc..)
+
+    for (let i = getIndexByDate(startDate.toISODate()); i < getIndexByDate(now.plus({day: 1}).toISODate()); i++) {
+        let currentDate = dateList[i];
+        if (currentDate.sleepingTime != undefined) {
+            sleepCumul.hours += currentDate.sleepingTime.hours;
+            sleepCumul.minutes += currentDate.sleepingTime.minutes;
+
+            if (sleepCumul.minutes > 59) {
+                sleepCumul.hours += Math.floor(sleepCumul.minutes / 60);
+                sleepCumul.minutes = sleepCumul.minutes % 60;
+            }
+        }
+    }
+
+    console.log(sleepCumul)
+    console.log(sleepGoal)
+
+    //TODO display sleep dept
+    //TODO display informations if they're not enough data to calcul the sleep dept
+    //TODO advice of the sleeping time for tonight.
 }
 
 /**
@@ -504,9 +488,10 @@ function goToDate(date) {
 }
 
 /**
- * Get the index of the dateList array by the date in parameter
+ * Get the index of the dateList array by the ISO date in parameter
  * 
- * @param {String} date 
+ * @param {String} date as ISO
+ * @return {int} index
  * @see dateList
  */
 function getIndexByDate(date) {
@@ -532,4 +517,118 @@ function roundUpToMultOf7(n) {
         return Math.floor(n/7.0) * 7;
     else
         return 7;
+}
+
+/**
+ * Remove the ":" in an hh:mm format String
+ * 
+ * @param {String} value 
+ * @returns String at format "XXXX" containing;
+ */
+ function formateHourField(value) {
+    if (value ==  undefined || value == "") {
+        return "0000";
+    } else  {
+        return value.replace(":", "");
+    }
+}
+
+/**
+ * Validate if the value passed in parameter is at the format HH:mm
+ * 
+ * @param {String} value 
+ * @returns Bool
+ */
+function validateHourField(value) {
+    let regex = /^0[0-9]|1[0-9]|2[0-3]:[0-5][0-9] to 0[0-9]|1[0-9]|2[0-3]:[0-5][0-9]$/;
+    return regex.test(value);
+}
+
+/**
+ * Validate if the value passed in parameter is in the ["6", "7", "8"], if true return the value else return "7" (default value)
+ * 
+ * @param {String} value 
+ * @returns String
+ */
+function validateHourSleepNeeded(value) {
+    let choices = ["6", "7", "8"];
+
+    if (choices.includes(value)) {
+        return value;
+    } else {
+        return "7";
+    }
+}
+
+/**
+ * Add the ":" in an hhmm format String
+ * 
+ * @param {String} value 
+ * @returns String at format "XX:XX" containing;
+ */
+function formatHourForInput(hour) {
+    if (hour ==  undefined || hour == "") {
+        return "00:00";
+    } else {
+        return [hour.slice(0, 2), ":" , hour.slice(2)].join("");
+    }
+}
+
+/**
+ * Get the time between two different hour based on a classical sleeping schedule.
+ * That's mean if the first hour is after noon, it will be consider as before midnight of yesterday.
+ * 
+ * @param {String} from at format HH:mm
+ * @param {String} to at format HH:mm
+ * @param {boolean} round true if you want the data rounded to the quarter
+ * @return Object at format {hours: x, minutes: x}, undefined if (from === to)
+ */
+function getTimeBetweenHour(from, to, round = false) {
+    if (from === to) return undefined
+
+    if (round) {
+        from = roundedQuaterly(from);
+        to = roundedQuaterly(to);
+    }
+
+    from = from.split(":");
+    to = to.split(":");
+
+
+    let dateFrom = DateTime.fromISO("2000-01-04T" + from[0] + from[1]);
+    let dateTo = DateTime.fromISO("2000-01-04T" + to[0] + to[1]);
+
+    if (from[0] > 12) {
+        dateFrom = dateFrom.minus({day: 1});
+    } else if (from[0] >= to[0]) {
+        dateTo = dateTo.plus({day: 1});
+    }
+
+    let dateDiff = dateTo.diff(dateFrom, ["hour", "minutes"]);
+
+    return dateDiff.toObject()
+}
+
+/**
+ * Get time (at format HH:mm) passed in parameter rounded to the nearest quarter
+ * 
+ * @param {String} time at format HH:mm
+ * @return {String} 
+ */
+function roundedQuaterly(time) {
+    time = time.split(":");
+    let hour = time[0];
+    let minutes = parseInt(time[1]);
+    
+    if (minutes > "52") {
+        if (hour == "23") {
+            return "00:00"
+        } else {
+            return (parseInt(hour) + 1) + ":00"
+        }
+    }
+
+    let result = (parseInt((minutes + 7.5)/15) * 15) % 60
+
+    return hour + ":" + (result == 0 ? "00" : result.toString());
 }
