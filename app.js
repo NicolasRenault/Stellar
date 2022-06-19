@@ -1,5 +1,4 @@
 import "./assets/css/style.css"
-import "./assets/css/tiny-slider.css"
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut} from "firebase/auth";
 import { getFirestore, collection, addDoc, setDoc, doc, getDoc, query, where, getDocs, orderBy} from "firebase/firestore";
