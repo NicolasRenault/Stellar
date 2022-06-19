@@ -42,6 +42,7 @@ const inputWeekWakeTime = document.getElementById("input_week_wake_time");
 const inputWeekendSleepTime = document.getElementById("input_weekend_sleep_time");
 const inputWeekendWakeTime = document.getElementById("input_weekend_wake_time");
 const selectHourOfSleep = document.getElementById("select_hour_of_sleep");
+const sleepDeptText = document.getElementById("sleep_dept");
 const sleepingScheduleList = document.getElementById("sleeping_schedule");
 const inputScheduleSleepTime = document.getElementById("input_schedule_sleep_time");
 const inputScheduleWakeTime = document.getElementById("input_schedule_wake_time");
@@ -57,7 +58,11 @@ let unsubscribe;
 
 let dateList = [];
 let currentDateIndex = null;
-let sleepDept = 0;
+let sleepInformations = {
+    dept: {hours: 0, minutes: 0},
+    todayGoal: 0,
+    status: 1, //? -1 if not enought informations, 0 if not enought sleep, 1 if enought sleep (default)
+};
 
 let slider;
 
@@ -335,17 +340,17 @@ function displayDateList() {
  * @see dateList
  * @see sleepDept
  */
-function calculateSleepDept() { //TODO call this methoed each time you modify a date within the range of day for the calcul (in saveDateList())
+function calculateSleepDept() {
     if (dateList == undefined || dateList.empty) return;
 
     let range = 7; //? Number of day used to calculate de sleep dept
     let now = DateTime.now();
     let startDate = DateTime.now().minus({day: range});
-    let sleepCumul = {hours: 0, minutes: 0}; //TODO global
-    let sleepGoal = (selectHourOfSleep.value ?? 7) * range; //TODO global
-    //TODO add an indicator if you have enough data or not (maybe number of day with date, etc..)
+    let sleepCumul = {hours: 0, minutes: 0};
+    let sleepGoal = (selectHourOfSleep.value ?? 7) * range;
+    let dayMissed = 0;
 
-    for (let i = getIndexByDate(startDate.toISODate()); i < getIndexByDate(now.plus({day: 1}).toISODate()); i++) {
+    for (let i = getIndexByDate(startDate.toISODate()); i <= getIndexByDate(now.toISODate()); i++) {
         let currentDate = dateList[i];
         if (currentDate.sleepingTime != undefined) {
             sleepCumul.hours += currentDate.sleepingTime.hours;
@@ -355,15 +360,53 @@ function calculateSleepDept() { //TODO call this methoed each time you modify a 
                 sleepCumul.hours += Math.floor(sleepCumul.minutes / 60);
                 sleepCumul.minutes = sleepCumul.minutes % 60;
             }
+        } else {
+            dayMissed++;
+        }
+    }
+    sleepInformations.dept = sleepCumul;
+    sleepInformations.totalGoal = sleepGoal;
+
+    if (dayMissed > 0) {
+        sleepInformations.status = -1;
+    } else {
+        if (sleepCumul.hours >= sleepGoal) {
+            sleepInformations.status = 1;
+        } else {
+            sleepInformations.status = 0;
         }
     }
 
-    console.log(sleepCumul)
-    console.log(sleepGoal)
+    displaySleepDeptInformations();
+}
 
-    //TODO display sleep dept
-    //TODO display informations if they're not enough data to calcul the sleep dept
+/**
+ * Display the sleep dept informations using data from the sleepInformations object
+ * 
+ * @see sleepInformations
+ */
+function displaySleepDeptInformations() {
+    //TODO re write all informations sentences.
     //TODO advice of the sleeping time for tonight.
+
+    switch (sleepInformations.status) {
+        case -1:
+            sleepDeptText.innerHTML = "Not enought sleeping informations. This week you have currently slept <b>" + 
+            sleepInformations.dept.hours + "</b> hours" + 
+            ((sleepInformations.dept.minutes != 0) ?  " and <b>" + sleepInformations.dept.minutes + "</b> minutes" : "") ;
+            break;
+        case 0:
+            sleepDeptText.innerHTML = "You haven't slept enough. This week you have currently slept <b>" + 
+            sleepInformations.dept.hours + "</b> hours" + 
+            ((sleepInformations.dept.minutes != 0) ?  " and <b>" + sleepInformations.dept.minutes + "</b> minutes" : "") ;
+            break;
+        case 1:
+        default:
+            sleepDeptText.innerHTML = "You have slept enough. This week you have currently slept <b>" + 
+            sleepInformations.dept.hours + "</b> hours" + 
+            ((sleepInformations.dept.minutes != 0) ?  " and <b>" + sleepInformations.dept.minutes + "</b> minutes" : "") ;
+            break;
+    }
 }
 
 /**
@@ -388,6 +431,7 @@ function saveDateList() {
                         wake_time: date.wake_time,
                     });
                 }
+                calculateSleepDept();
             } catch (e) {
                 console.error("Error adding document: ", e);
             }
