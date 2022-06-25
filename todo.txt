@@ -1,0 +1,8 @@
+- Dark/Light Mod -> Night and Day: (new js file -> sky.js)
+    - Night: 
+        - Stars randomly sized and placed
+    - Day:
+        -Sun randomly placed
+        - Beautifull gradient for sky 
+- Tutorial page (/tutorial)
+- Good transition for login / logout
