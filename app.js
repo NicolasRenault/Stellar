@@ -35,7 +35,7 @@ const signInBtn = document.getElementById("signInBtn");
 const signOutBtn = document.getElementById("sign_out_btn");
 const whenSignedIn = document.getElementById("when_signed_in");
 const whenSignedOut = document.getElementById("when_signed_out");
-const userDetails = document.getElementById("user_details");
+const userDetailsText = document.getElementById("user_details_text");
 const editUserSettings = document.getElementById("edit_user_settings");
 const inputWeekSleepTime = document.getElementById("input_week_sleep_time");
 const inputWeekWakeTime = document.getElementById("input_week_wake_time");
@@ -157,7 +157,7 @@ function getUserSettings() {
     /**
      * User detail information
      */
-    userDetails.innerHTML = `<h3>Hello ${user.displayName}!</h3> <p>User ID: ${user.uid}</p>`;
+    userDetailsText.innerHTML = `<h3>Hello ${user.displayName}!</h3> <p>User ID: ${user.uid}</p>`;
 }
 
 /**

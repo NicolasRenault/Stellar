@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -9,36 +9,40 @@
 		<title>Vite App</title>
 	</head>
 
+	
+
 	<body>
-		<h1>Stellar</h1> 
-
-		<section id="when_signed_out">
-
-			<button id="signInBtn">Sign in with Google</button>
-
-		</section>
-
-		<section id="when_signed_in" hidden="true">
-
-			<div id="user_details"></div>
-
-			<button id="sign_out_btn">Sign Out</button>
-
-			<section id="user_settings">
-				<input id="input_week_sleep_time" type="time" value="00:00">
-				<input id="input_week_wake_time" type="time" value="00:00">
-				<input id="input_weekend_sleep_time" type="time" value="00:00">
-				<input id="input_weekend_wake_time" type="time" value="00:00">
-				<select name="select_hour_of_sleep" id="select_hour_of_sleep">
-					<option value="6">6</option>
-					<option value="7" selected>7</option>
-					<option value="8">8</option>
-				</select>
-
-				<button id="edit_user_settings">Edit your settings</button>
+		<header>
+			<div>
+				<h1 class="title center">Stellar</h1>
+				<div id="user_details">
+					<div id="user_details_text"></div>
+					<button id="sign_out_btn">Sign Out</button>
+					
+					<div id="user_settings">
+						<input id="input_week_sleep_time" type="time" value="00:00">
+						<input id="input_week_wake_time" type="time" value="00:00">
+						<input id="input_weekend_sleep_time" type="time" value="00:00">
+						<input id="input_weekend_wake_time" type="time" value="00:00">
+						<select name="select_hour_of_sleep" id="select_hour_of_sleep">
+							<option value="6">6</option>
+							<option value="7" selected>7</option>
+							<option value="8">8</option>
+						</select>
+						
+						<button id="edit_user_settings">Edit your settings</button>
+					</div>
+				</div>
+			</div>
+		</header>
+		<main class="center">
+			<section id="when_signed_out">
+				
+				<button id="signInBtn">Sign in with Google</button>
+				
 			</section>
-
-			<section id="user_sleep_informations">
+			
+			<section id="when_signed_in" hidden="true">
 				<p id="sleep_dept"></p>
 				<div id="sleeping_schedule"></div>
 				<input id="input_schedule_sleep_time" type="time" value="00:00">
@@ -47,6 +51,11 @@
 				<button id="previous_btn">previous</button>
 				<button id="next_btn">next</button>
 			</section>
-		</section>
+		</main>
+		
+		<footer>
+			<h2 class="credit center">By <a href="https://nicolasrenault.com" target="_blank">Nicolas Renault</a></h2>
+		</footer>
 	</body>
-</html>
+	</html>
+	
