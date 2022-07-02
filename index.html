@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.4/tiny-slider.css">
 		<script defer type="module" src="/app.js"></script>
-		<title>Vite App</title>
+		<script defer type="module" src="/sky.js"></script>
+		<title>Stellar</title>
 	</head>
 
-	
+	<div id="sky-effects"></div>
 
-	<body>
+	<body class="dark" >
 		<header>
-			<div>
-				<h1 class="title center">Stellar</h1>
+			<h1 class="title center">Stellar</h1>
+			<div id="menu">
+				<button id="switch-mode">
+					<img id="switch-svg" src="assets/icons/dark_mode_FILL0_wght400_GRAD0_opsz48.svg">
+				</button>
+					<img src="assets/icons/menu_FILL0_wght400_GRAD0_opsz48.svg">
 				<div id="user_details">
 					<div id="user_details_text"></div>
 					<button id="sign_out_btn">Sign Out</button>
@@ -54,7 +59,7 @@
 		</main>
 		
 		<footer>
-			<h2 class="credit center">By <a href="https://nicolasrenault.com" target="_blank">Nicolas Renault</a></h2>
+			<a class="credit center" href="https://nicolasrenault.com" target="_blank">By Nicolas Renault</a>
 		</footer>
 	</body>
 	</html>

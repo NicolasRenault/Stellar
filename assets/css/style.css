@@ -1,10 +1,9 @@
-#app {
+:root {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  --color-dark: azure;
+  --color-light: midnightblue;
 }
 
 html {
@@ -29,6 +28,26 @@ section {
   margin-top : 10vh;
 }
 
+#sky-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+#menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+#switch-mode {
+  background: transparent;
+  border: none;
+}
+
 .title {
   position: sticky;
   top: 0;
@@ -39,6 +58,10 @@ section {
   width: 100%;
   position: fixed;
   bottom: 0px;
+}
+
+a.credit {
+  text-decoration: none;
 }
 
 .center {
@@ -53,29 +76,53 @@ section {
   flex-direction: row;
   justify-content: space-between;
 }
+
 .row.date {
   width: 100px;
 }
 
-/* Sky gradients fromhttps://codepen.io/billyysea/pen/nLroLY */
-.sky-gradient-night, .dark { /* sky-gradient-03 */
-  background: linear-gradient(to bottom, #020111 10%,#3a3a52 100%);
+
+/* TODO Change svg color for #menu */
+/* Dark mode */
+body.dark {
+  color: var(--color-dark);
 }
 
-.sky-gradient-day, .light { /* sky-gradient-10 */
-  background: linear-gradient(to bottom, #b7eaff 0%,#94dfff 100%);
+.dark #sky-effects {
+  background: linear-gradient(to bottom, #020111 10%,#3a3a52 100%); /* Sky gradient 03 from https://codepen.io/billyysea/pen/nLroLY */
 }
 
-html.dark {
-  color: azure;
+.dark a.credit {
+  color: var(--color-dark);
 }
 
+.dark a.credit:hover {
+  color: var(--color-dark);
+}
+
+.dark a.credit:active {
+  color: var(--color-dark);
+}
+
+/* Light mode */
 html.light {
-  color: midnightblue;
+  color: var(--color-light);
 }
 
-#user_details {
-  display: none;
+.light #sky-effects {
+  background: linear-gradient(to bottom, #b7eaff 0%,#94dfff 100%); /* Sky gradient 10 from https://codepen.io/billyysea/pen/nLroLY */
+}
+
+.light a.credit {
+  color: var(--color-light);
+}
+
+.light a.credit:hover {
+  color: var(--color-light);
+}
+
+.light a.credit:active {
+  color: var(--color-light);
 }
 
 /* TNS custom css */
@@ -90,5 +137,13 @@ html.light {
 
 /* TMP */
 .date.current button { 
-  color: magenta;
+  background-color: magenta;
+}
+
+#user_details {
+  display: none;
+}
+
+#menu {
+  filter: invert(50%);
 }
