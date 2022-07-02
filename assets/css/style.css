@@ -4,6 +4,7 @@
   -moz-osx-font-smoothing: grayscale;
   --color-dark: azure;
   --color-light: midnightblue;
+  --transition-timing: 1.5s;
 }
 
 html {
@@ -28,14 +29,30 @@ section {
   margin-top : 10vh;
 }
 
-#sky-effects {
+.background {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  transition: opacity var(--transition-timing);
+}
+
+#sky-effects {
+  background-color: transparent;
   z-index: -1;
 }
+
+#dark-background {
+  background: linear-gradient(to bottom, #020111 10%,#3a3a52 100%); /* Sky gradient 03 from https://codepen.io/billyysea/pen/nLroLY */
+  z-index: -2;
+}
+#light-background {
+  background: linear-gradient(to bottom, #b7eaff 0%,#94dfff 100%); /* Sky gradient 10 from https://codepen.io/billyysea/pen/nLroLY */
+  z-index: -3;
+}
+
+
 
 #menu {
   position: absolute;
@@ -85,11 +102,21 @@ a.credit {
 /* TODO Change svg color for #menu */
 /* Dark mode */
 body.dark {
+  transition: color var(--transition-timing);
   color: var(--color-dark);
 }
 
-.dark #sky-effects {
-  background: linear-gradient(to bottom, #020111 10%,#3a3a52 100%); /* Sky gradient 03 from https://codepen.io/billyysea/pen/nLroLY */
+.dark #dark-background {
+  opacity: 1;
+}
+
+.dark #light-background {
+  opacity: 0;
+}
+
+.dark #menu {
+  transition: filter var(--transition-timing);
+  filter: invert(100%); /* TODO find the good filter to match the text color */
 }
 
 .dark a.credit {
@@ -105,12 +132,22 @@ body.dark {
 }
 
 /* Light mode */
-html.light {
+body.light {
+  transition: color var(--transition-timing);
   color: var(--color-light);
 }
 
-.light #sky-effects {
-  background: linear-gradient(to bottom, #b7eaff 0%,#94dfff 100%); /* Sky gradient 10 from https://codepen.io/billyysea/pen/nLroLY */
+.light #dark-background {
+  opacity: 0;
+}
+
+.light #light-background {
+  opacity: 1;
+}
+
+.light #menu {
+  transition: filter var(--transition-timing);
+  filter: invert(0%); /* TODO find the good filter to match the text color */
 }
 
 .light a.credit {
@@ -144,6 +181,3 @@ html.light {
   display: none;
 }
 
-#menu {
-  filter: invert(50%);
-}
