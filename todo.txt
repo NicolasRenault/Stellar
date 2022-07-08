@@ -2,7 +2,7 @@
     - Night: 
         - Stars randomly sized and placed
     - Day:
-        - Sun randomly placed (sun + halo of light)
+        - Sun randomly placed (sun + halo of light -> use in css filter: drop-shadow)
     - Both:
         - Beautifull gradient for sky (http://ourownthing.co.uk/gradpad.html)
 - Tutorial page (/tutorial)
