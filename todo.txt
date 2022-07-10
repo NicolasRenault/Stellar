@@ -1,10 +1,10 @@
-- Dark/Light Mod -> Night and Day: (new js file -> sky.js)
+- Dark/Light Mod -> ✔️ Night and Day: (new js file -> sky.js)
     - Night: 
         - Stars randomly sized and placed
     - Day:
         - Sun randomly placed (sun + halo of light -> use in css filter: drop-shadow)
     - Both:
-        - Beautifull gradient for sky (http://ourownthing.co.uk/gradpad.html)
+        ✔️ Beautifull gradient for sky (http://ourownthing.co.uk/gradpad.html)
 - Tutorial page (/tutorial)
 - Good transition for login / logout (logout currently reload page)
 - Good looking and medicaly "precise" hour of sleep per night selector (with propositions including age and sexe)

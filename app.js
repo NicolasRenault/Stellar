@@ -53,6 +53,38 @@ const nextBtn = document.getElementById("next_btn");
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.error(error));
 signOutBtn.onclick = () => {signOut(auth); location.reload()} //! Warning change if the reaload take too much ressources instead of using logoutUser()
 
+const SvgCirclePercentTemplate = 
+    `<svg viewBox="0 0 36 36" class="circular-chart">
+        <path
+        class="circle-bg"
+        d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <path
+        class="circle"
+        stroke-dasharray="{percent}, 100"
+        stroke="url(#percent-gradient)"
+        d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <text x="18" y="20.35" class="percentage-text">{text}</text>
+    </svg>`;
+
+const SvgEmptyCirclePercentTemplate = 
+    `<svg viewBox="0 0 36 36" class="circular-chart empty">
+        <path
+        class="circle-bg"
+        d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <text x="18" y="20.35" class="percentage-text">{text}</text>
+    </svg>`;
+
+const defaultHoursOfSleep = 7;
+
 let user;
 let unsubscribe;
 
@@ -65,6 +97,8 @@ let sleepInformations = {
 };
 
 let slider;
+
+
 
 /** ------------
  * 
@@ -282,6 +316,7 @@ function displayDateList() {
     var rowDiv = document.createElement("div");
     rowDiv.classList.add("row");
     groupDiv.appendChild(rowDiv);
+
     /**
      * Create the list of li 
      */
@@ -289,11 +324,22 @@ function displayDateList() {
         if (date.displayInformations.isDisplayed) {
             var div = document.createElement("div");
             var btn = document.createElement("button");
-            btn.dataset.date = btn.innerHTML = date.displayInformations.ISO;
+            btn.dataset.date = date.displayInformations.ISO;
+            
+            if (date.dbId != undefined) {
+                let currentPercent = getPercentPerDay(date.sleep_time, date.wake_time);
+                btn.innerHTML = getPourcentCircle(currentPercent, date.displayInformations.ISO.slice(-2));
+            } else {
+                btn.innerHTML = getEmptyPourcentCircle(date.displayInformations.ISO.slice(-2));
+            }
+
+            
+            btn.classList.add("percent");
 
             btn.onclick = () => {
                 goToDate(date.displayInformations.ISO);
             }
+
 
             div.classList.add("date");
             div.classList.add(i);
@@ -347,7 +393,7 @@ function calculateSleepDept() {
     let now = DateTime.now();
     let startDate = DateTime.now().minus({day: range});
     let sleepCumul = {hours: 0, minutes: 0};
-    let sleepGoal = (selectHourOfSleep.value ?? 7) * range;
+    let sleepGoal = (selectHourOfSleep.value ?? defaultHoursOfSleep) * range;
     let dayMissed = 0;
 
     for (let i = getIndexByDate(startDate.toISODate()); i <= getIndexByDate(now.toISODate()); i++) {
@@ -482,7 +528,6 @@ function selectDate(index) {
  * Change the current date for the previous one
  */
 function previousDate() {
-    slider.goTo(Math.ceil((currentDateIndex) / 7));
     if (currentDateIndex > 0) {
         currentDateIndex--;
         selectDate(currentDateIndex);
@@ -498,7 +543,6 @@ function previousDate() {
  * Change the current date for the next one
  */
 function nextDate() {
-    slider.goTo(Math.ceil((currentDateIndex) / 7));
     if (currentDateIndex < dateList.length - 1) {
         currentDateIndex++;
 
@@ -641,7 +685,7 @@ function getTimeBetweenHour(from, to, round = false) {
     let dateFrom = DateTime.fromISO("2000-01-04T" + from[0] + from[1]);
     let dateTo = DateTime.fromISO("2000-01-04T" + to[0] + to[1]);
 
-    if (from[0] > 12) {
+    if (from[0] > 12 && to[0] < 12) {
         dateFrom = dateFrom.minus({day: 1});
     } else if (from[0] >= to[0]) {
         dateTo = dateTo.plus({day: 1});
@@ -674,4 +718,40 @@ function roundedQuaterly(time) {
     let result = (parseInt((minutes + 7.5)/15) * 15) % 60
 
     return hour + ":" + (result == 0 ? "00" : result.toString());
+}
+
+/**
+ * Get the a innerHTML for the circle percent from a template 
+ * 
+ * @param {int} percent for the svg stroke. 0 for empty
+ * @param {String} text that will be displayed in the center of the circle
+ * @see SvgCirclePercentTemplate
+ */
+function getPourcentCircle(percent, text) {
+    return SvgCirclePercentTemplate.replace("{percent}", percent).replace("{text}", text);
+}
+
+/**
+ * Get the a innerHTML for the empty circle percent from a template 
+ * 
+ * @param {String} text that will be displayed in the center of the circle
+ * @see SvgCirclePercentTemplate
+ */
+function getEmptyPourcentCircle(text) {
+    return SvgEmptyCirclePercentTemplate.replace("{text}", text);
+}
+
+/**
+ * Get the percent of hour slept between two times 
+ * 
+ * @param {String} from 
+ * @param {String} to 
+ */
+function getPercentPerDay(from, to) {
+    let hoursSlept = getTimeBetweenHour(from, to, true);
+    if (hoursSlept === undefined) return 0;
+    
+    let percent = (100 * hoursSlept.hours) / (selectHourOfSleep.value ?? defaultHoursOfSleep);
+
+    return (percent > 100 ? 100 : percent);
 }
