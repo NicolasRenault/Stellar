@@ -2,7 +2,7 @@ const skyContainer = document.getElementById("sky-effects");
 const switchBtn = document.getElementById("switch-mode");
 const switchSvg = document.getElementById("switch-svg");
 
-const darkSVG  = "/assets/icons/dark_mode_FILL0_wght400_GRAD0_opsz48.svg"
+const darkSVG  = "/assets/icons/dark_mode_FILL0_wght400_GRAD0_opsz48.svg" //TODO Fix the img in production see https://vitejs.dev/guide/assets.html
 const lightSVG  = "/assets/icons/light_mode_FILL0_wght400_GRAD0_opsz48.svg"
 
 let currentMode = "dark";

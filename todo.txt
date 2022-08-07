@@ -5,6 +5,7 @@
         - Sun randomly placed (sun + halo of light -> use in css filter: drop-shadow)
     - Both:
         ✔️ Beautifull gradient for sky (http://ourownthing.co.uk/gradpad.html)
+⚠️TODO Fix the img in production see https://vitejs.dev/guide/assets.html
 - Tutorial page (/tutorial)
 - Good transition for login / logout (logout currently reload page)
 - Good looking and medicaly "precise" hour of sleep per night selector (with propositions including age and sexe)
