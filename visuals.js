@@ -1,9 +1,44 @@
 const skyContainer = document.getElementById("sky-effects");
 const switchBtn = document.getElementById("switch-mode");
 const switchSvg = document.getElementById("switch-svg");
+const title = document.getElementById("title");
+const isConnected = document.getElementById("is-connected");
 
 const darkSVG  = "/assets/icons/dark_mode_FILL0_wght400_GRAD0_opsz48.svg" //TODO Fix the img in production see https://vitejs.dev/guide/assets.html
 const lightSVG  = "/assets/icons/light_mode_FILL0_wght400_GRAD0_opsz48.svg"
+
+/**
+ * Connection status changed (When is-connected div class have "connected" className)
+ */
+const options = {
+    attributes: true
+};
+
+function callback(mutationList, observer) {
+    mutationList.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class' && mutation.target.className === "connected") {
+            loggedIn();
+        }
+    });
+}
+
+const observer = new MutationObserver(callback)
+observer.observe(isConnected, options)
+
+function loggedIn() {
+    console.log("Connect from visual.js")
+    title.classList.remove("init");
+}
+
+/**
+ * ANIMATIONS
+ */
+
+title.classList.add("init");
+
+/**
+ * SKY
+ */
 
 let currentMode = "dark";
 

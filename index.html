@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.4/tiny-slider.css">
 		<script defer type="module" src="/app.js"></script>
-		<script defer type="module" src="/sky.js"></script>
+		<script defer type="module" src="/visuals.js"></script>
 		<title>Stellar</title>
 	</head>
 
@@ -23,18 +23,19 @@
 	<div id="sky-effects" class="background"></div>
 	<div id="dark-background" class="background"></div>
 	<div id="light-background" class="background"></div>
+	<div id="is-connected"></div>
 
 	<body class="dark" >
 		<header>
-			<h1 class="title center">Stellar</h1>
+			<h1 id="title" class="title center">Stellar</h1>
 			<div id="menu">
 				<button id="switch-mode">
 					<img id="switch-svg" src="assets/icons/dark_mode_FILL0_wght400_GRAD0_opsz48.svg">
 				</button>
 					<img src="assets/icons/menu_FILL0_wght400_GRAD0_opsz48.svg">
+					<button id="sign_out_btn">Sign Out</button>
 				<div id="user_details">
 					<div id="user_details_text"></div>
-					<button id="sign_out_btn">Sign Out</button>
 					
 					<div id="user_settings">
 						<input id="input_week_sleep_time" type="time" value="00:00">
@@ -54,9 +55,7 @@
 		</header>
 		<main class="center">
 			<section id="when_signed_out">
-				
 				<button id="signInBtn">Sign in with Google</button>
-				
 			</section>
 			
 			<section id="when_signed_in" hidden="true">
