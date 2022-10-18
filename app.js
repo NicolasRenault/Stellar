@@ -49,6 +49,7 @@ const inputScheduleWakeTime = document.getElementById("input_schedule_wake_time"
 const validateScheduleHoursBtn = document.getElementById("validate_schedule_btn");
 const previousBtn = document.getElementById("previous_btn");
 const nextBtn = document.getElementById("next_btn");
+const isConnected = document.getElementById("is-connected");
 
 signInBtn.onclick = () => signInWithPopup(auth, provider).catch((error) => console.error(error));
 signOutBtn.onclick = () => {signOut(auth); location.reload()} //! Warning change if the reaload take too much ressources instead of using logoutUser()
@@ -153,8 +154,10 @@ nextBtn.addEventListener("click", nextDate);
  */
 function loginUser(loggedUser) {
     user = loggedUser;
-    whenSignedIn.hidden = false;
+    whenSignedIn.hidden = false; //TODO changed to class
     whenSignedOut.hidden = true;
+
+    isConnected.classList.add("connected");
 
     getUserSettings();
     initDateList();
